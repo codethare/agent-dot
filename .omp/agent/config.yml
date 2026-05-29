@@ -1,0 +1,17 @@
+modelRoles: 
+  default: openrouter/deepseek/deepseek-v4-flash:free
+  smol: openrouter/deepseek/deepseek-v4-flash:free
+  slow: openrouter/deepseek/deepseek-v4-flash:free
+  vision: openrouter/deepseek/deepseek-v4-flash:free
+  plan: openrouter/deepseek/deepseek-v4-flash:free
+  designer: google/gemini-2.5-flash
+  commit: google/gemini-2.5-flash
+  task: google/gemini-2.5-flash
+theme: 
+  dark: dark-swamp
+  light: light
+statusLine: 
+  separator: ascii
+  preset: full
+display: 
+  showTokenUsage: true
