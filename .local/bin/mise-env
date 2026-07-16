@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+
+ENV_NAME="MISE"
+
+HOME_MOUNT="/home/ms"
+CONFIG_DIR="${HOME}/bwrap/mise_box"
+
+LD_SO=$(find /usr -name 'ld-linux*.so.2' 2>/dev/null | head -1)
+
+set -euo pipefail
+(exec bwrap \
+  --unshare-all \
+  --share-net \
+  --clearenv \
+  --uid 1000 \
+  --gid 1000 \
+  --setenv "PATH" "${HOME}/.bin:/opt/bun/bin:/usr/bin:${HOME}/.bun/bin:${HOME}/.cargo/bin" \
+  --setenv "HOME" "$HOME_MOUNT" \
+  --setenv "USER" "$HOME_MOUNT" \
+  --setenv "LOGNAME" "$HOME_MOUNT" \
+  --setenv "http_proxy" "http://127.0.0.1:1080" \
+  --setenv "https_proxy" "http://127.0.0.1:1080" \
+  --setenv "all_proxy" "http://127.0.0.1:1080" \
+  --setenv "NO_PROXY" "localhost,127.0.0.1" \
+  --setenv "TERM" "$TERM" \
+  --hostname "${ENV_NAME}" \
+  --symlink "/usr/bin" "/bin" \
+  --symlink "/usr/bin" "/sbin" \
+  --symlink "/usr/lib" "/lib" \
+  --ro-bind "/usr/lib" "/usr/lib" \
+  --ro-bind "/usr/share" "/usr/share" \
+  --ro-bind "/usr/bin" "/usr/bin" \
+  --ro-bind "/usr/bin/gpg-agent" "/usr/bin/gpg-agent" \
+  --ro-bind "$LD_SO" "/lib64/ld-linux-x86-64.so.2" \
+  --ro-bind "/etc/resolv.conf" "/etc/resolv.conf" \
+  --ro-bind "/etc/ssl" "/etc/ssl" \
+  --ro-bind "/etc/ca-certificates" "/etc/ca-certificates" \
+  --ro-bind "/etc/localtime" "/etc/localtime" \
+  --ro-bind "/etc/containers/seccomp.json" "/etc/containers/seccomp.json" \
+  --ro-bind "/etc/hosts" "/etc/hosts" \
+  --ro-bind "/etc/environment" "/etc/environment" \
+  --ro-bind "/etc/passwd" "/etc/passwd" \
+  --ro-bind "/etc/group" "/etc/group" \
+  --ro-bind "/etc/machine-id" "/var/lib/dbus/machine-id" \
+  --ro-bind "/etc/firejail" "/etc/firejail" \
+  --bind "$CONFIG_DIR" "$HOME_MOUNT" \
+  --ro-bind "$HOME/.bashrc" "$HOME_MOUNT/.bashrc" \
+  --ro-bind "$HOME/.config/fish" "$HOME_MOUNT/.config/fish" \
+  --ro-bind "$HOME/.config/zellij" "$HOME_MOUNT/.config/zellij" \
+  --ro-bind "$HOME/.config/tmux" "$HOME_MOUNT/.config/tmux" \
+  --ro-bind "$HOME/.config/nvim" "$HOME_MOUNT/.config/nvim" \
+  --ro-bind "$HOME/.curlrc" "$HOME_MOUNT/.curlrc" \
+  --ro-bind "$HOME/.gitconfig" "$HOME_MOUNT/.gitconfig" \
+  --proc "/proc" \
+  --dev "/dev" \
+  --tmpfs "/tmp" \
+  /usr/bin/bash
+)

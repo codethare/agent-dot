@@ -1,0 +1,75 @@
+{
+  "quietStartup": true,
+  "npmCommand": [
+    "bun"
+  ],
+  "packages": [
+    "npm:pi-subagents",
+    {
+      "source": "npm:pi-show-diffs",
+      "extensions": [
+        "-index.ts"
+      ]
+    },
+    "git:github.com/DietrichGebert/ponytail",
+    "npm:pi-mcp-adapter",
+    "npm:@ff-labs/pi-fff",
+    "npm:pi-codex-goal",
+    "npm:@quintinshaw/pi-dynamic-workflows",
+    "npm:pi-skill-shiori",
+    "npm:pi-web-access",
+    "npm:context-mode"
+  ],
+  "lastChangelogVersion": "0.85.1",
+  "theme": "solarized-osaka",
+  "defaultProvider": "opencode-go",
+  "defaultModel": "mimo-v2.5",
+  "defaultThinkingLevel": "high",
+  "subagents": {
+    "defaultModel": "opencode-go/deepseek-v4-flash",
+    "agentOverrides": {
+      "oracle": {
+        "model": "opencode-go/kimi-k3",
+        "fallbackModels": [
+          "opencode-go/deepseek-v4-flash"
+        ]
+      },
+      "context-builder": {
+        "model": "opencode-go/glm-5.3-flash"
+      },
+      "delegate": {
+        "model": "opencode-go/deepseek-v4-flash"
+      },
+      "planner": {
+        "model": "opencode-go/deepseek-v4-flash"
+      },
+      "researcher": {
+        "model": "opencode-go/deepseek-v4-flash"
+      },
+      "reviewer": {
+        "model": "opencode-go/kimi-k3",
+        "thinking": "high",
+        "fallbackModels": [
+          "opencode-go/glm-5.3-flash",
+          "opencode-go/deepseek-v4-pro"
+        ]
+      },
+      "worker": {
+        "model": "opencode-go/glm-5.3-flash",
+        "fallbackModels": [
+          "opencode-go/kimi-k2.7-code"
+        ]
+      },
+      "scout": {
+        "model": "opencode-go/deepseek-v4-flash"
+      }
+    }
+  },
+  "hideThinkingBlock": false,
+  "extensions": [
+    "-extensions/pi-write-guard/index.ts",
+    "-extensions/nvim-bridge.ts",
+    "-extensions/model-cycle.ts",
+    "+extensions/nvim-approve.ts"
+  ]
+}

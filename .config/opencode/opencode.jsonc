@@ -1,9 +1,21 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  //________________________________________________________________
+  //                                                        核心模型
+  // 格式: provider/model 或 provider/model:variant
+  // 切换模型时修改 model 字段即可，variant 通过 :variant_name 激活
+  "model": "opencode-go/kimi-k2.6",
+  "small_model": "opencode-go/deepseek-v4-flash",
+  "default_agent": "build",
+  "instructions": [
+    "~/.config/opencode/CLAUDE.md",
+    "~/.config/opencode/skills/*/SKILL.md",
+    "~/.config/opencode/agents/*.md"
+  ],
   "plugin": [
     "superpowers@git+https://github.com/obra/superpowers.git",
-    "@tarquinen/opencode-dcp@latest",
-    "oh-my-openagent@latest"
+    "context-mode",
+    "@dietrichgebert/ponytail"
   ],
   "permission": {
     "bash": {
@@ -38,14 +50,124 @@
     "websearch": "allow",
     "glob": "allow",
     "grep": "allow",
-    "skill": "allow"
+    "skill": "allow",
+    "repo_clone": "ask",
+    "external_directory": "ask",
+    "doom_loop": "ask"
   },
+  //________________________________________________________________
+  //                                                        监听忽略
+  "watcher": {
+    "ignore": [
+      "node_modules/**",
+      ".venv/**",
+      "venv/**",
+      "__pycache__/**",
+      "dist/**",
+      "build/**",
+      ".next/**",
+      ".git/**",
+      ".cache/**",
+      "tmp/**",
+      "temp/**",
+      ".idea/**",
+      ".vscode/**",
+      "*.lock",
+      "**/*.log",
+      "*.min.js",
+      "*.min.css",
+      "coverage/**"
+    ]
+  },
+  //________________________________________________________________
+  //                                                        压缩控制
   "compaction": {
     "auto": true,
-    "strategy": "summarize",
-    "threshold": 0.8,
-    "prune_tool_outputs": true
+    "prune": true,
+    "tail_turns": 4,
+    "preserve_recent_tokens": 64000,
+    "reserved": 10000
   },
+  //________________________________________________________________
+  //                                                        工具输出
+  "tool_output": {
+    "max_lines": 500,
+    "max_bytes": 32768
+  },
+  //________________________________________________________________
+  //                                                        附件限制 
+  "attachment": {
+    "image": {
+      "auto_resize": true,
+      "max_width": 1024,
+      "max_height": 1024,
+      "max_base64_bytes": 524288
+    }
+  },
+  //________________________________________________________________
+  //                                                        代理配置
+  // Xiaomi MiMo-V2.5 规划基准: plan (高确定性工具调用与任务拆解) -> temp=0.1 / top_p=0.85
+  // Moonshot Kimi-V2.6 构建基准: build/general/explore (硬核代码重构与全栈工程) -> temp=0.45 / top_p=0.9
+  "agent": {
+  //   "plan": {
+  //     "max_tokens": 32768,
+  //     "temperature": 0.1,
+  //     "top_p": 0.85,
+  //     "steps": 25,
+  //     "model": "opencode/mimo-v2.5-free"
+  //   },
+  //   "build": {
+  //     "max_tokens": 32768,
+  //     "temperature": 0.45,
+  //     "top_p": 0.9,
+  //     "steps": 36,
+  //     "model": "openrouter/moonshotai/kimi-k2.6:free"
+  //   },
+  //   "general": {
+  //     "max_tokens": 32768,
+  //     "temperature": 0.3,
+  //     "top_p": 0.9,
+  //     "steps": 15,
+  //     "model": "openrouter/moonshotai/kimi-k2.6:free"
+  //   },
+  //   "explore": {
+  //     "max_tokens": 8192,
+  //     "temperature": 0.7,
+  //     "top_p": 0.95,
+  //     "steps": 12,
+  //     "model": "openrouter/moonshotai/kimi-k2.6:free"
+  //   },
+  //   "title": {
+  //     "max_tokens": 512,
+  //     "temperature": 0.1,
+  //     "top_p": 0.8,
+  //     "model": "openrouter/moonshotai/kimi-k2.6:free"
+  //   },
+  //   "summary": {
+  //     "max_tokens": 2048,
+  //     "temperature": 0.1,
+  //     "top_p": 0.8,
+  //     "model": "openrouter/moonshotai/kimi-k2.6:free"
+  //   },
+  //   "compaction": {
+  //     "max_tokens": 8192,
+  //     "temperature": 0.1,
+  //     "top_p": 0.8,
+  //     "model": "openrouter/moonshotai/kimi-k2.6:free"
+  //   }
+    "plan": {
+      "model": "opencode-go/deepseek-v4-pro"
+    },
+    "build": {
+      "model": "opencode-go/deepseek-v4-pro"
+    },
+    "research": {
+      "model": "opencode-go/deepseek-v4-flash"
+    }
+  },
+  //________________________________________________________________
+  //                                                        会话环境
+  "snapshot": true, // “snapshot": 7" 表示保留7天
   "lsp": {
     "rust": {
       "command": [
@@ -60,11 +182,24 @@
     }
   },
   "mcp": {
-    "context7": {
+    "exa": {
       "type": "remote",
-      "url": "https://mcp.context7.com/mcp",
+      "url": "https://mcp.exa.ai/mcp",
       "enabled": true,
-      "headers": {
+      "environment": {
+        "EXA_API_KEY": "${EXA_API_KEY}"
+      }
+    },
+    "codegraph": {
+      "type": "local",
+      "command": ["codegraph", "serve", "--mcp"],
+      "enabled": true
+    },
+    "context7": {
+      "type": "local",
+      "command": ["bun", "x", "@upstash/context7-mcp"],
+      "enabled": true,
+      "environment": {
         "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY}"
       }
     }

@@ -1,0 +1,202 @@
+#!/usr/bin/env bash
+# Runs OpenCode inside a Bubblewrap sandbox.
+# Security layers:
+#   1. seccomp-BPF blocks ioctl(..., TIOCSTI, ...) keystroke injection.
+#   1.1  gcc -O2 -o gen-tiocsti-filter seccomp-tiocsti-filter.c -lseccomp
+#   2. Dynamic /etc/passwd & /etc/group fix UID/GID mapping after unshare-user.
+#   3. .git directories are mounted read-only (override with OC_UNSAFE_RW_GIT=1).
+#   4. --die-with-parent ensures no orphaned sandbox processes.
+
+AGENT_NAME="pi"
+
+BOX_DIR="${HOME}/bwrap/code_box/build"
+CONFIG_DIR="${HOME}/bwrap/pi_box"
+MISE_ENV_DIR="${HOME}/bwrap/mise_box"
+AI_ENV_DIR="${HOME}/bwrap/ai_box"
+TOOLS_DIR="${HOME}/bwrap/tools_box"
+
+LD_SO=$(find /usr -name 'ld-linux*.so.2' 2>/dev/null | head -1)
+
+set -euo pipefail
+
+# -- Dynamic /etc/passwd & /etc/group (fixes "I have no name!" after unshare-user) --
+GID=$(id -g)
+PASSWD_FILE="${TMPDIR:-/tmp}/pi-sandbox-passwd-$$"
+GROUP_FILE="${TMPDIR:-/tmp}/pi-sandbox-group-$$"
+trap 'rm -f "$PASSWD_FILE" "$GROUP_FILE"' EXIT
+
+echo "${USER}:x:${UID}:${GID}::${HOME}:/usr/bin/bash" >"$PASSWD_FILE"
+printf "users:x:%s:\nnogroup:x:65534:" "$GID" >"$GROUP_FILE"
+
+# -- Bwrap base opts --
+bwrap_opts=(
+  --unshare-all
+  --share-net
+  --die-with-parent
+  --clearenv
+  --cap-drop ALL
+  --uid "$(id -u)"
+  --gid "$(id -g)"
+  --setenv "PATH" "${HOME}/.bin:/opt/bun/bin:/usr/bin:${HOME}/.bun/bin:${HOME}/.cargo/bin"
+  --setenv "HOME" "${HOME}"
+  --setenv "TERM" "${TERM}"
+  --setenv "LANG" "${LANG}"
+  --setenv "LC_ALL" "${LC_ALL}"
+  --setenv "LC_CTYPE" "${LC_CTYPE}"
+  --setenv "http_proxy" "http://127.0.0.1:1080" \
+  --setenv "https_proxy" "http://127.0.0.1:1080" \
+  --setenv "all_proxy" "http://127.0.0.1:1080" \
+  --setenv "NO_PROXY" "localhost,127.0.0.1" \
+  --setenv "OPENCODE_API_KEY" "$(cat ~/.config/keys/opencode-gooo)" \
+  --setenv "OPENROUTER_API_KEY" "$(cat ~/.config/keys/openrouter)" \
+  --setenv "CRAZYROUTER_API_KEY" "$(cat ~/.config/keys/crazyrouter)" \
+  --setenv "GITHUB_TOKEN" "$(cat ~/.config/keys/github_coder)" \
+  --setenv "GOOGLE_API_KEY" "$(cat ~/.config/keys/google)" \
+  --setenv "GEMINI_API_KEY" "$(cat ~/.config/keys/google)" \
+  --setenv "CONTEXT7_API_KEY" "$(cat ~/.config/keys/context7)" \
+  --setenv "EXA_API_KEY" "$(cat ~/.config/keys/exa)" \
+  --hostname "${AGENT_NAME}"
+  --symlink "/usr/bin" "/bin"
+  --symlink "/usr/bin" "/sbin"
+  --symlink "/usr/lib" "/lib"
+  --ro-bind "/usr/lib" "/usr/lib"
+  --ro-bind "/usr/share" "/usr/share"
+  --ro-bind "/usr/bin" "/usr/bin"
+  --ro-bind "/usr/bin/gpg-agent" "/usr/bin/gpg-agent"
+  --ro-bind "/usr/bin/podman" "/usr/bin/podman"
+  --ro-bind "/usr/include" "/usr/include"
+  --ro-bind "$LD_SO" "/lib64/ld-linux-x86-64.so.2"
+  --ro-bind "/etc/resolv.conf" "/etc/resolv.conf"
+  --ro-bind "/etc/ssl" "/etc/ssl"
+  --ro-bind "/etc/hosts" "/etc/hosts"
+  --ro-bind "/etc/firejail" "/etc/firejail"
+  --ro-bind "/etc/localtime" "/etc/localtime"
+  --ro-bind "/etc/environment" "/etc/environment"
+  --ro-bind "/etc/ca-certificates" "/etc/ca-certificates"
+  --ro-bind "/etc/containers/seccomp.json" "/etc/containers/seccomp.json"
+  --ro-bind "$PASSWD_FILE" "/etc/passwd"
+  --ro-bind "$GROUP_FILE" "/etc/group"
+  --bind "$CONFIG_DIR" "${HOME}"
+  --bind "$BOX_DIR/review" "$BOX_DIR/review"
+  --bind "$BOX_DIR/workspace" "$BOX_DIR/workspace"
+  --bind "$BOX_DIR/testspace" "$BOX_DIR/testspace"
+  --ro-bind "${HOME}/.bashrc" "${HOME}/.bashrc"
+  --ro-bind "${HOME}/.config/fish" "${HOME}/.config/fish"
+  --ro-bind "${HOME}/.config/zellij" "${HOME}/.config/zellij"
+  --ro-bind "${HOME}/.config/tmux" "${HOME}/.config/tmux"
+  --ro-bind "${HOME}/.config/nvim" "${HOME}/.config/nvim"
+  --ro-bind "${HOME}/.config/lf" "${HOME}/.config/lf"
+  --ro-bind "${HOME}/.config/jj" "${HOME}/.config/jj"
+  --ro-bind "${HOME}/.curlrc" "${HOME}/.curlrc"
+  --ro-bind "${HOME}/.gitconfig" "${HOME}/.gitconfig"
+  --ro-bind "${HOME}/.dot/github/agent-dot/.npmrc" "${HOME}/.npmrc"
+  --ro-bind "$MISE_ENV_DIR/.local/share/mise/installs/bun/1.3.14/bin/bun" "${HOME}/.bin/node"
+  --ro-bind "$MISE_ENV_DIR/.local/share/mise/installs/bun/1.3.14/bin/bun" "${HOME}/.bin/bun"
+  --ro-bind "$MISE_ENV_DIR/.local/share/mise/installs/bun/1.3.14/bin/bun" "${HOME}/.bin/bunx"
+  --ro-bind "$MISE_ENV_DIR/.local/share/mise/installs/herdr/latest/herdr" "${HOME}/.bin/herdr"
+  --ro-bind "${AI_ENV_DIR}/.cargo/bin/rtk" "${HOME}/.cargo/bin/rtk"
+  --ro-bind "${AI_ENV_DIR}/skills/bigpowers/.pi/skills/" "${HOME}/.pi/agent/skills/bigpowers"
+  --ro-bind "${AI_ENV_DIR}/skills/pi-skills/youtube-transcript" "${HOME}/.pi/agent/skills/youtube-transcript"
+  --ro-bind "$TOOLS_DIR/.bun" "/opt/bun"
+  --ro-bind "$TOOLS_DIR/.local/bin/yt-dlp_linux" "${HOME}/.bin/yt-dlp"
+  --ro-bind "$TOOLS_DIR/codebase-memory-mcp/codebase-memory-mcp" "${HOME}/.bin/codebase-memory-mcp"
+  --dev "/dev"
+  --proc "/proc"
+  --tmpfs "/tmp"
+)
+
+# -- .git read-only protection (unless OC_UNSAFE_RW_GIT is set) --
+#-----------------------------------------------------------------
+# if [ -z "${PI_UNSAFE_RW_GIT:-}" ]; then
+#   git_ro_opts=()
+#   for dir in "$BOX_DIR/review" "$BOX_DIR/workspace"; do
+#     if [ -d "$dir" ]; then
+#       while IFS= read -r -d '' gitpath; do
+#         git_ro_opts+=( --ro-bind "$gitpath" "$gitpath" )
+#       done < <(find "$dir" \
+#         -name .git \
+#         \( -type d -o -type f -o -type l \) \
+#         -print0 2>/dev/null || true)
+#     fi
+#   done
+# fi
+#-----------------------------------------------------------------
+
+protect_gitdir() {
+  local g="$1"
+  if [ -L "$g" ]; then
+    # Symlink .git: granular subpath protection is unsafe to follow,
+    # fall back to binding the whole entry read-only.
+    git_ro_opts+=( --ro-bind "$g" "$g" )
+  elif [ -d "$g" ]; then
+    mkdir -p "$g/hooks" "$g/info" "$g/objects/info"
+    touch "$g/config" "$g/info/attributes" "$g/info/exclude" "$g/objects/info/alternates"
+    for sub in hooks config info/attributes info/exclude objects/info/alternates; do
+      local full="$g/$sub"
+      [ -e "$full" ] && git_ro_opts+=( --ro-bind "$full" "$full" )
+    done
+  elif [ -f "$g" ]; then
+    # .git file (worktree): keep the pointer read-only so the worktree
+    # cannot be reparented to a different gitdir.
+    git_ro_opts+=( --ro-bind "$g" "$g" )
+  fi
+}
+
+rw_repos=()
+if [ -n "${OC_UNSAFE_RW_GIT:-}" ] && [ "$OC_UNSAFE_RW_GIT" != "1" ]; then
+  # Split comma-separated list of repo paths to exempt from protection.
+  # OC_UNSAFE_RW_GIT=1 (blanket allow) skips this whole block, leaving
+  # rw_repos empty so the elif branch in the loop disables protection.
+  IFS=',' read -ra rw_repos <<< "$OC_UNSAFE_RW_GIT"
+fi
+git_ro_opts=()
+for dir in "$BOX_DIR/review" "$BOX_DIR/workspace"; do
+  if [ -d "$dir" ]; then
+    while IFS= read -r -d '' gitpath; do
+      ro=true
+      if [ "${#rw_repos[@]}" -gt 0 ]; then
+        for allow in "${rw_repos[@]}"; do
+          [[ "$gitpath" == "$allow"* ]] && ro=false && break
+        done
+      elif [ -n "${OC_UNSAFE_RW_GIT:-}" ]; then
+        ro=false  # blanket allow
+      fi
+      if [ "$ro" = true ]; then
+        protect_gitdir "$gitpath"
+        # Submodule gitdirs and worktree gitdirs live under the parent .git
+        # and would otherwise be writable. Apply the same granular protection.
+        subdirs=()
+        [ -d "$gitpath/modules" ] && subdirs+=("$gitpath/modules")
+        [ -d "$gitpath/worktrees" ] && subdirs+=("$gitpath/worktrees")
+        if [ "${#subdirs[@]}" -gt 0 ]; then
+          while IFS= read -r -d '' subgit; do
+            protect_gitdir "$subgit"
+          done < <(find "${subdirs[@]}" -mindepth 1 -maxdepth 1 -type d -print0 2>/dev/null || true)
+        fi
+      fi
+    done < <(find "$dir" \
+      -name .git \
+      \( -type d -o -type f -o -type l \) \
+      -print0 2>/dev/null || true)
+  fi
+done
+
+
+# -- seccomp-BPF filter path (resolve robustly even when called via $PATH) --
+SECCOMP_FILTER="$(dirname "$0")/gen-tiocsti-filter"
+if [[ ! -x "$SECCOMP_FILTER" ]]; then
+  SCRIPT_PATH="$(command -v "$0" 2>/dev/null || true)"
+  if [[ -n "$SCRIPT_PATH" && "$SCRIPT_PATH" == */* ]]; then
+    SECCOMP_FILTER="$(dirname "$SCRIPT_PATH")/gen-tiocsti-filter"
+  fi
+fi
+if [[ ! -x "$SECCOMP_FILTER" ]]; then
+  echo "Error: seccomp filter not found at $SECCOMP_FILTER" >&2
+  exit 1
+fi
+
+exec bwrap \
+  "${bwrap_opts[@]}" \
+  "${git_ro_opts[@]}" \
+  --seccomp 3 3< <("$SECCOMP_FILTER") \
+  -- /usr/bin/bash -c "herdr"

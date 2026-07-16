@@ -1,0 +1,35 @@
+[tools]
+"github:anomalyco/opencode" = "latest"
+
+bun = "latest"
+# uv (Python package manager)
+uv = "latest"
+
+
+[settings]
+# Keep auto_install enabled for normal mise workflow.
+# Process storms were caused by shell PATH/init ordering, not this flag.
+auto_install = true
+
+# Use idiomatic version files (.node-version, .python-version, etc.)
+idiomatic_version_file = true
+
+# Experimental features
+experimental = true
+
+always_keep_download = false
+always_keep_install = false
+[settings.npm]
+# Use bun as the installer/runner for every `npm:` backend tool above.
+# Unified toolchain + much faster installs. Node still provides the runtime.
+# CAVEAT: this switch is global (no per-package opt-out). bun also skips
+# package lifecycle scripts by default — if a tool that downloads a binary in
+# postinstall goes missing after `mise install`, add `bun_args = "--trust"` to
+# that specific tool entry. Known risk: @google/gemini-cli has bun-install
+# issues; verify `gemini --version` after switching, and revert this to "npm"
+# if it breaks.
+package_manager = "bun"
+
+[env]
+# Add local bin to PATH
+_.path = ["./node_modules/.bin", "./bin"]

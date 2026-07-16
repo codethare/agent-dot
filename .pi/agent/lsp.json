@@ -1,0 +1,40 @@
+   {
+     "rust-analyzer": {
+       "command": ["rust-analyzer"],
+       "extensions": [".rs"],
+       "initialization": {
+         "settings": { "checkOnSave": true, "cargo": { "allFeatures": true } }
+       }
+     },
+     "gopls": {
+       "command": ["gopls"],
+       "extensions": [".go"],
+       "initialization": {
+         "settings": { "build.experimentalDiagnostics": true }
+       }
+     },
+     "zls": {
+       "command": ["zls"],
+       "extensions": [".zig"],
+       "initialization": {
+         "settings": { "enable_snippets": true }
+       }
+     },
+     "biome": {
+       "command": ["biome", "lsp-proxy"],
+       "extensions": [
+         ".astro", ".css", ".cts", ".cjs", ".graphql", ".gql", ".html",
+         ".js", ".json", ".jsonc", ".jsx", ".mjs", ".mts", ".svelte",
+         ".ts", ".tsx", ".vue"
+       ]
+     },
+     "ty": {
+       "command": ["ty", "server"],
+       "extensions": [".py", ".pyi"]
+     },
+     "ruff": {
+       "command": ["ruff", "server"],
+       "extensions": [".py", ".pyi"]
+     },
+     "timeout": 30000
+   }

@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "context7": {
+      "command": "bunx",
+      "args": ["@upstash/context7-mcp"],
+      "lifecycle": "eager"
+    },
+    "codegraph": {
+      "command": "codegraph",
+      "args": [
+        "serve",
+        "--mcp"
+      ]
+    },
+    "context-mode": {
+      "command": "context-mode"
+    },
+   "codebase-memory-mcp": {
+     "command": "codebase-memory-mcp",
+     "args": [],
+     "lifecycle": "lazy"
+   }
+  }
+}

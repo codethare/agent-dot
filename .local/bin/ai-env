@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+
+HOME_MOUNT="/home/a1"
+CONFIG_DIR="${HOME}/bwrap/ai_box"
+MISE_ENV_DIR="${HOME}/bwrap/mise_box"
+
+LD_SO=$(find /usr -name 'ld-linux*.so.2' 2>/dev/null | head -1)
+
+set -euo pipefail
+(exec bwrap \
+  --unshare-all \
+  --share-net \
+  --clearenv \
+  --uid 1000 \
+  --gid 1000 \
+  --setenv "PATH" "${HOME}/.bin:/opt/bun/bin:/usr/bin:${HOME}/.bun/bin:${HOME}/.cargo/bin" \
+  --setenv "HOME" "$HOME_MOUNT" \
+  --setenv "USER" "$HOME_MOUNT" \
+  --setenv "LOGNAME" "$HOME_MOUNT" \
+  --setenv "http_proxy" "http://127.0.0.1:1080" \
+  --setenv "https_proxy" "http://127.0.0.1:1080" \
+  --setenv "all_proxy" "http://127.0.0.1:1080" \
+  --setenv "NO_PROXY" "localhost,127.0.0.1" \
+  --setenv "TERM" "$TERM" \
+  --hostname "a1" \
+  --symlink "/usr/bin" "/bin" \
+  --symlink "/usr/bin" "/sbin" \
+  --symlink "/usr/lib" "/lib" \
+  --ro-bind "/usr/lib" "/usr/lib" \
+  --ro-bind "/usr/share" "/usr/share" \
+  --ro-bind "/usr/bin" "/usr/bin" \
+  --ro-bind "/usr/include" "/usr/include" \
+  --ro-bind "/usr/bin/gpg-agent" "/usr/bin/gpg-agent" \
+  --ro-bind "$LD_SO" "/lib64/ld-linux-x86-64.so.2" \
+  --ro-bind "/etc/resolv.conf" "/etc/resolv.conf" \
+  --ro-bind "/etc/ssl" "/etc/ssl" \
+  --ro-bind "/etc/ca-certificates" "/etc/ca-certificates" \
+  --ro-bind "/etc/localtime" "/etc/localtime" \
+  --ro-bind "/etc/containers/seccomp.json" "/etc/containers/seccomp.json" \
+  --ro-bind "/etc/hosts" "/etc/hosts" \
+  --ro-bind "/etc/environment" "/etc/environment" \
+  --ro-bind "/etc/passwd" "/etc/passwd" \
+  --ro-bind "/etc/group" "/etc/group" \
+  --ro-bind "/etc/machine-id" "/var/lib/dbus/machine-id" \
+  --ro-bind "/etc/firejail" "/etc/firejail" \
+  --bind "$CONFIG_DIR" "$HOME_MOUNT" \
+  --ro-bind "$MISE_ENV_DIR/.local/share/mise/installs/bun/1.3.14/bin/bun" "$HOME_MOUNT/.bin/bun" \
+  --ro-bind "$MISE_ENV_DIR/.local/share/mise/installs/bun/1.3.14/bin/bunx" "$HOME_MOUNT/.bin/bunx" \
+  --ro-bind "$MISE_ENV_DIR/.local/share/mise/installs/zig/0.16.0/bin/zig" "$HOME_MOUNT/.bin/zig" \
+  --ro-bind "$MISE_ENV_DIR/.local/share/mise/installs/bun/1.3.14/bin/bunx" "$HOME_MOUNT/.bin/bun" \
+  --ro-bind "$MISE_ENV_DIR/.local/share/mise/installs/node/26.2.0/bin/node" "$HOME_MOUNT/.bin/node" \
+  --ro-bind "$MISE_ENV_DIR/.local/share/mise/installs/node/26.2.0/bin/npm" "$HOME_MOUNT/.bin/npm" \
+  --ro-bind "$MISE_ENV_DIR/.local/share/mise/installs/node/26.2.0/bin/npm" "$HOME_MOUNT/.bin/npx" \
+  --ro-bind "$HOME/.bashrc" "$HOME_MOUNT/.bashrc" \
+  --ro-bind "$HOME/.config/fish" "$HOME_MOUNT/.config/fish" \
+  --ro-bind "$HOME/.config/tmux" "$HOME_MOUNT/.config/tmux" \
+  --ro-bind "$HOME/.config/nvim" "$HOME_MOUNT/.config/nvim" \
+  --ro-bind "$HOME/.curlrc" "$HOME_MOUNT/.curlrc" \
+  --ro-bind "$HOME/.gitconfig" "$HOME_MOUNT/.gitconfig" \
+  --proc "/proc" \
+  --dev "/dev" \
+  --tmpfs "/tmp" \
+  /usr/bin/fish
+)
+
+  # --bind "$MISE_ENV_DIR/.local/state/mise" "$HOME_MOUNT/.local/state/mise" \
+  # --bind "$MISE_ENV_DIR/.local/share/mise" "$HOME_MOUNT/.local/share/mise" \
+  # --ro-bind "$MISE_ENV_DIR/.config/mise" "$HOME_MOUNT/.config/mise" \
+  # --ro-bind "$MISE_ENV_DIR/.cache/mise" "$HOME_MOUNT/.cache/mise" \
