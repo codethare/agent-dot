@@ -1,0 +1,30 @@
+[
+  "npm:pi-subagents",
+  "git:github.com/DietrichGebert/ponytail",
+  "npm:pi-mcp-adapter",
+  "npm:@ff-labs/pi-fff",
+  "npm:pi-codex-goal",
+  "npm:@quintinshaw/pi-dynamic-workflows",
+  {
+    "source": "npm:pi-skill-shiori",
+    "extensions": [
+      "-src/index.ts"
+    ]
+  },
+  "npm:pi-web-access",
+  "npm:context-mode",
+  "npm:pi-commandcode-provider",
+  "npm:@ogulcancelik/pi-ghost",
+  "npm:pi-cache-optimizer",
+  {
+    "source": "npm:pi-sandbox",
+    "extensions": [
+      "-index.ts"
+    ]
+  },
+  "npm:open-codebase-index",
+  "npm:@juicesharp/rpiv-advisor",
+  "npm:@narumitw/pi-retry",
+  "git:github.com/obra/superpowers",
+  "npm:pi-lens"
+]

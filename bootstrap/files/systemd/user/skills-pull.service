@@ -1,0 +1,6 @@
+[Unit]
+Description=Pull all git repos under ~/skills
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/skills-pull

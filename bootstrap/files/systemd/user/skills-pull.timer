@@ -1,0 +1,9 @@
+[Unit]
+Description=Daily pull of ~/skills repos
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,19 @@
+{
+  "modelKey": "commandcode/claude-haiku-5-5",
+  "effort": "high",
+  "disabledForModels": [
+    "commandcode/claude-sonnet-5-5",
+    "commandcode/claude-opus-5-5",
+    "commandcode/claude-opus-5",
+    "commandcode/claude-fable-5-1",
+    "commandcode/gpt-6-astra"
+  ],
+  "guidance": {
+    "promptGuidelines": [
+      "Call advisor only when you are genuinely stuck: a repeated failure, a decision you cannot resolve from the code, or conflicting evidence.",
+      "Call advisor before declaring a non-trivial task complete.",
+      "Do not call advisor before starting routine work, and do not call it on a fixed schedule.",
+      "After each advisor result, restate its key guidance in your next visible reply."
+    ]
+  }
+}

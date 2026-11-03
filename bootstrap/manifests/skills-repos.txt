@@ -1,0 +1,3 @@
+agent-skills	https://github.com/addyosmani/agent-skills
+designersAndEngineers	https://github.com/emilkowalski/skills
+superpowers	https://github.com/obra/superpowers

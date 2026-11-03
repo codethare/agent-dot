@@ -1,0 +1,85 @@
+onboarding = false
+
+[update]
+channel = "stable"
+# version_check = true
+# manifest_check = true
+
+[terminal]
+default_shell = "fish"
+
+[keys]
+prefix = "ctrl+t"
+
+split_vertical = "prefix+%"
+split_horizontal = 'prefix+"'
+
+# workspace sl
+navigate_workspace_up = "k"
+navigate_workspace_down = "j"
+focus_pane_left = "prefix+h"
+focus_pane_down = "prefix+j"
+focus_pane_up = "prefix+k"
+focus_pane_right = "prefix+l"
+
+# agents sl
+focus_agent = "prefix+alt+1..9"
+previous_agent = "prefix+<"
+next_agent = "prefix+>"
+copy_mode = "prefix+["
+
+[keys.indexed]
+agents = "alt"
+
+[ui.toast]
+delivery = "off"
+
+[ui.sound]
+enabled = false
+
+[advanced]
+scrollback_limit_bytes = 1048576
+
+[experimental]
+pane_history = true  # disabled: causes ~40% idle CPU with many panes
+allow_nested = false
+
+[session]
+resume_agents_on_restore = true
+
+[ui]
+agent_panel_sort = "priority"
+sidebar_collapsed_mode = "hidden"   # 折叠时零宽 ，而不是留一条 compact 状态栏
+pane_outer_borders = false          # 外框那 1 行 1 列还给你
+# pane_scrollbars = false             # 回收滚动条 那一列
+sidebar_width = 18
+sidebar_max_width = 22
+# workspace tree
+
+[ui.sidebar.spaces]
+rows = [["state_icon", "workspace"], ["branch", "git_status"]]
+[ui.sidebar.agents]
+rows = [["state_icon", "workspace", "tab"], ["agent"]]
+
+[theme]
+name = "solarized"
+
+auto_switch = false
+[theme.custom]
+accent = "#278bd3"
+panel_bg = "#00141a"
+surface0 = "#002d38"
+surface1 = "#073541"
+surface_dim = "#00141a"
+overlay0 = "#586e74"
+overlay1 = "#647a82"
+text = "#adb8b8"
+subtext0 = "#9fabad"
+mauve = "#6d72c5"
+green = "#859900"
+yellow = "#b28600"
+red = "#dc312e"
+blue = "#278bd3"
+teal = "#2aa298"
+peach = "#ca4c16"
+

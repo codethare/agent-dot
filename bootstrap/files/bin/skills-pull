@@ -1,0 +1,8 @@
+#!/bin/sh
+# Pull every repo under ~/skills. --ff-only: no merge commits, no rewriting local work.
+rc=0
+for d in "$HOME"/skills/*/.git; do
+  repo=${d%/.git}
+  git -C "$repo" pull --ff-only --quiet || { echo "FAILED $repo" >&2; rc=1; }
+done
+exit $rc

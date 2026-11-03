@@ -25,7 +25,6 @@ map_entries() {
     "pi/pi-ntfy.json"                  ".pi/agent/pi-ntfy.json"                  "file" \
     "pi/themes"                        ".pi/agent/themes"                        "tree" \
     "pi/extensions"                    ".pi/agent/extensions"                    "tree" \
-    "pi/docs"                          ".pi/agent/docs"                          "tree" \
     "xdg/herdr/config.toml"            ".config/herdr/config.toml"               "file" \
     "xdg/herdr/.plugins.lock"          ".config/herdr/.plugins.lock"             "file" \
     "xdg/ponytail/config.json"         ".config/ponytail/config.json"            "file" \
