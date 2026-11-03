@@ -102,7 +102,7 @@ Included, with their source path:
 
 | Repo path | Source |
 | --- | --- |
-| `files/pi/AGENTS.md`, `settings.json`, `keybindings.json`, `.mcp.json`, `commandcode-models.json`, `sandbox.json` | `~/.pi/agent/` |
+| `files/pi/AGENTS.md`, `settings.json`, `keybindings.json`, `.mcp.json`, `commandcode-models.json`, `sandbox.json`, `pi-ntfy.json` | `~/.pi/agent/` |
 | `files/pi/themes/` | `~/.pi/agent/themes/` |
 | `files/pi/extensions/` | `~/.pi/agent/extensions/` |
 | `files/pi/docs/` | `~/.pi/agent/docs/` |
@@ -125,7 +125,6 @@ Excluded, with reason:
 | `mcp-cache.json`, `mcp-last-seen-version.json`, `mcp-onboarding.json`, `mcp-project-approvals.json`, `models-store.json`, `next-suggestion.json`, `run-history.jsonl`, `pi-subagents/`, `pi-web-access/` | runtime state |
 | `auth.json` | credentials |
 | `trust.json` | 18 absolute project paths; restoring it would pre-approve directories that do not exist on the new machine |
-| `pi-ntfy.json` | the ntfy topic is a capability: anyone with it can read the notifications |
 | `*.test.ts`, `.settings.json.bak*` | development artifacts |
 | `~/.pi/workflows/`, `~/.pi/context-mode/`, `~/.pi/cache/` | per-project state, 29M of index data, cache |
 | `~/.config/herdr/session-snapshots/`, `*.log`, `release-notes.json`, `session*.json` | session state |
@@ -139,6 +138,9 @@ Applied by both `capture.sh` and `verify.sh`, so the comparison is against the s
   both on its own; keeping them turns every package update into repo churn.
 - `xdg/openspec/config.json`: drop `telemetry.anonymousId`. It is a persistent identifier and has
   no effect on behaviour.
+- `pi/pi-ntfy.json`: `topic` becomes `""`. The extension returns early on an empty topic, so a
+  restored machine sends nothing until a fresh topic is set — no silent delivery to the old one,
+  and no shared public topic as a placeholder.
 
 JSON transforms use `python3 -m json.tool`-style stdlib code in `lib.sh`. No `jq` dependency.
 
@@ -207,7 +209,7 @@ Out of scope by request: no value is captured, compared, or restored. `secrets.c
 names only:
 
 - `COMMAND_CODE_API_KEY` — read by the current provider setup.
-- ntfy topic — regenerate, do not restore the old one.
+- ntfy topic — tracked as an empty string; set a new one, or leave it empty to stay silent.
 - Pi OAuth providers, if any are added later: `pi auth`.
 
 ## Decisions made here, worth checking while reading
@@ -219,7 +221,8 @@ ownhing shell config in two repos.
    atomically renames is unverified, and a broken link would surface as a config that silently
    stops updating. `verify` covers the cost of copying.
 3. **`trust.json` is deliberately not restored.** Trust is per machine and per directory.
-4. **`pi-ntfy.json` is treated as a credential**, not as config.
+4. **`pi-ntfy.json` is tracked with the topic redacted.** The file shape survives a restore; the
+   topic does not, because anyone holding it can read the notifications.
 5. **Volatile Pi keys are dropped on capture**, as listed under Sanitize rules.
 6. **OpenCode and `.omp` stay in the repo but are not restored.** Leaving them in place keeps
    history; wiring them into `install.sh` would restore a tool this machine does not run.
