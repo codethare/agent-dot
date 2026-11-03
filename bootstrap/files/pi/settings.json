@@ -74,7 +74,7 @@
       ]
     }
   },
-  "hideThinkingBlock": false,
+  "hideThinkingBlock": true,
   "extensions": [
     "-builtin:mcp",
     "-extensions/pi-gzip.ts",
