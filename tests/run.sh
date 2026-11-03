@@ -8,6 +8,7 @@ assert_contains() { case "$1" in *"$2"*) PASS=$((PASS+1));; *) FAIL=$((FAIL+1));
 assert_not_contains() { case "$1" in *"$2"*) FAIL=$((FAIL+1)); echo "FAIL: unexpected [$2] in [$1]";; *) PASS=$((PASS+1));; esac; }
 assert_exit() { local want=$1; shift; "$@"; local got=$?; assert_eq "$got" "$want" "exit of $*"; }
 
+[ -f "$REPO/tests/fixtures.sh" ] && . "$REPO/tests/fixtures.sh"
 for f in "$REPO"/tests/test_*.sh; do . "$f"; done
 for t in $(declare -F | awk '{print $3}' | grep '^test_'); do
   before=$FAIL; $t; [ "$before" -eq "$FAIL" ] && echo "ok   $t"

@@ -1,20 +1,3 @@
-make_fixture() {
-  FIX="$TMP/fix"
-  rm -rf "$FIX"
-  mkdir -p "$FIX/home/.pi/agent/extensions" "$FIX/home/skills/foo" "$FIX/repo"
-  cp -a "$REPO/bootstrap" "$FIX/repo/bootstrap"
-  git init -q "$FIX/repo"
-  git -C "$FIX/repo" add bootstrap
-  git -C "$FIX/repo" -c user.email=t@t -c user.name=t commit -q -m init
-  printf '{"packages":["npm:a",{"source":"npm:b","extensions":["-index.ts"]}],"lastChangelogVersion":"9"}' > "$FIX/home/.pi/agent/settings.json"
-  printf '{"topic":"pi-secret","server":"https://ntfy.sh"}' > "$FIX/home/.pi/agent/pi-ntfy.json"
-  printf 'export default 1\n' > "$FIX/home/.pi/agent/extensions/a.ts"
-  git init -q "$FIX/home/skills/foo"
-  git -C "$FIX/home/skills/foo" remote add origin https://example.com/foo.git
-}
-
-run_capture() { ( cd "$FIX/repo" && AGENT_BOOTSTRAP_HOME="$FIX/home" bash bootstrap/capture.sh "$@" ); }
-
 test_capture_sanitizes_and_copies() {
   make_fixture
   run_capture >/dev/null 2>&1
