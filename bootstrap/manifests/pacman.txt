@@ -1,0 +1,5 @@
+git
+bun
+mise
+fish
+tmux

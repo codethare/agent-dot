@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# Test double for the Pi CLI. State lives in $FAKE_STATE (one source per line);
+# settings are rewritten the way `pi install` does it, as plain strings.
+state=${FAKE_STATE:?FAKE_STATE not set}
+settings=${FAKE_SETTINGS:-}
+[ -n "${FAKE_LOG:-}" ] && printf 'pi %s\n' "$*" >> "$FAKE_LOG"
+[ -n "${FAKE_LOG:-}" ] && printf 'PATH=%s\n' "$PATH" >> "$FAKE_LOG"
+[ -n "${FAKE_LOG:-}" ] && printf 'PI_CODING_AGENT_DIR=%s\n' "${PI_CODING_AGENT_DIR:-}" >> "$FAKE_LOG"
+
+case "${1:-}" in
+  update)
+    [ -n "${FAKE_UPDATE_FAIL:-}" ] && exit 1
+    exit 0
+    ;;
+  list)
+    sed 's/^/  /' "$state" 2>/dev/null
+    ;;
+  install)
+    src=${2:?missing source}
+    if [ -z "${FAKE_INSTALL_NOOP:-}" ]; then
+      printf '%s\n' "$src" >> "$state"
+      if [ -n "$settings" ] && [ -f "$settings" ]; then
+        python3 - "$settings" "$src" <<'PY'
+import json
+import sys
+
+path, source = sys.argv[1], sys.argv[2]
+obj = json.load(open(path))
+obj["packages"] = [
+    source
+    if (isinstance(e, str) and e == source)
+    or (isinstance(e, dict) and e.get("source") == source)
+    else e
+    for e in obj.get("packages", [])
+]
+json.dump(obj, open(path, "w"), indent=2)
+PY
+      fi
+    fi
+    ;;
+  --version) echo "pi 0.0.0" ;;
+esac
