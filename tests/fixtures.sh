@@ -7,6 +7,11 @@ make_fixture() {
   rm -rf "$FIX"
   mkdir -p "$FIX/home/.pi/agent/extensions" "$FIX/home/skills/foo" "$FIX/repo"
   cp -a "$REPO/bootstrap" "$FIX/repo/bootstrap"
+  # Start from an empty tracked set: the real repo ships captured config, which
+  # would otherwise satisfy the assertions below.
+  rm -rf "$FIX/repo/bootstrap/files" \
+    "$FIX/repo/bootstrap/manifests/pi-packages.json" \
+    "$FIX/repo/bootstrap/manifests/skills-repos.txt"
   git init -q "$FIX/repo"
   git -C "$FIX/repo" add bootstrap
   git -C "$FIX/repo" -c user.email=t@t -c user.name=t commit -q -m init

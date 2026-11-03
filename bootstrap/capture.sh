@@ -38,6 +38,10 @@ mkdir -p "$FILES_DIR" "$MANIFESTS_DIR"
 while IFS=$'\t' read -r repo_rel home_rel kind; do
   src=$(host_path "$home_rel")
   dest=$(repo_path "$repo_rel")
+  if [ -L "$src" ]; then
+    warn "symlink source: $home_rel (skipped)"
+    continue
+  fi
   if [ ! -e "$src" ]; then
     warn "missing source: $home_rel (skipped)"
     continue
@@ -78,6 +82,10 @@ PY
 # Skill repos are recorded by remote, not by content: they are clones.
 regenerate_skills_repos() {
   local dir url name
+  if [ ! -d "$HOST_HOME/skills" ]; then
+    warn "no skills directory; keeping the existing skills manifest"
+    return 0
+  fi
   for dir in "$HOST_HOME"/skills/*/; do
     [ -d "$dir/.git" ] || continue
     name=$(basename "$dir")
@@ -91,7 +99,7 @@ regenerate_skills_repos() {
 
 leak_scan() {
   local hits
-  hits=$(grep -RInEf "$BOOTSTRAP_DIR/leak-patterns.txt" "$BOOTSTRAP_DIR" \
+  hits=$(grep -RInEi -f "$BOOTSTRAP_DIR/leak-patterns.txt" "$BOOTSTRAP_DIR" \
     --exclude-dir=.git 2>/dev/null | sed 's|^|leak scan: |' || true)
   if [ -n "$hits" ]; then
     printf '%s\n' "$hits" >&2

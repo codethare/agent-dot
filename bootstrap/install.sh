@@ -49,7 +49,7 @@ step_preflight() {
   require git
   require python3
   [ "$(id -u)" -ne 0 ] || die "do not run as root"
-  if ! grep -q '^ID=arch' /etc/os-release 2>/dev/null; then
+  if ! grep -q '^ID=arch' "${OS_RELEASE_FILE:-/etc/os-release}" 2>/dev/null; then
     warn "this is not Arch Linux; the packages step may not apply"
   fi
   if command -v curl >/dev/null 2>&1; then
@@ -79,7 +79,7 @@ step_packages() {
 }
 
 step_mise() {
-  require mise
+  [ "$DRY_RUN" = 1 ] || require mise
   local line
   while IFS= read -r line; do
     [ -n "$line" ] || continue
@@ -89,7 +89,7 @@ step_mise() {
 }
 
 step_bunglobals() {
-  require bun
+  [ "$DRY_RUN" = 1 ] || require bun
   local pkg
   while IFS= read -r pkg; do
     [ -n "$pkg" ] || continue
@@ -110,6 +110,9 @@ step_pifiles() {
       printf 'would copy: %s -> %s\n' "$src" "$dest"
       continue
     fi
+    if path_crosses_symlink "$dest"; then
+      die "refusing to write through symlink: $dest (replace it with a real file or directory)"
+    fi
     backup_target "$dest"
     mkdir -p "$(dirname "$dest")"
     if [ "$kind" = tree ]; then
@@ -126,11 +129,11 @@ step_pifiles() {
 }
 
 step_pipackages() {
-  require pi
   if [ "$DRY_RUN" = 1 ]; then
     printf 'would run: pi update --extensions\n'
     return 0
   fi
+  require pi
   pi update --extensions || warn "pi update --extensions reported a failure; checking what is installed"
   local missing
   missing=$(installed_package_sources | missing_package_sources || true)
@@ -142,8 +145,14 @@ step_pipackages() {
     done
     # `pi install` rewrites the entry as a plain string, which drops the
     # extension filters object entries carry; restore the tracked settings.
-    mkdir -p "$(dirname "$(host_path .pi/agent/settings.json)")"
-    cp "$(repo_path pi/settings.json)" "$(host_path .pi/agent/settings.json)"
+    local target
+    target=$(host_path .pi/agent/settings.json)
+    if path_crosses_symlink "$target"; then
+      die "refusing to write through symlink: $target (replace it with a real file)"
+    fi
+    mkdir -p "$(dirname "$target")"
+    backup_target "$target"
+    cp "$(repo_path pi/settings.json)" "$target"
     pi update --extensions || warn "pi update --extensions failed after the fallback"
     missing=$(installed_package_sources | missing_package_sources || true)
   fi
@@ -163,7 +172,7 @@ step_skills() {
       log "skills repo present: $name"
       continue
     fi
-    run git clone "$url" "$dir"
+    run git clone "$url" "$dir" < /dev/null
   done < "$MANIFESTS_DIR/skills-repos.txt"
 }
 

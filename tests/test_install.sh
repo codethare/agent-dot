@@ -62,6 +62,7 @@ run_install() {
     FAKE_STATE="$FIX/pi-state.txt" \
     FAKE_SETTINGS="$FIX/home/.pi/agent/settings.json" \
     FAKE_LOG="$FIX/log" \
+    OS_RELEASE_FILE="${OS_RELEASE_FILE:-}" \
     FAKE_INSTALL_NOOP="${FAKE_INSTALL_NOOP:-}" \
     bash bootstrap/install.sh "$@" )
 }
@@ -146,4 +147,44 @@ test_install_refuses_root() {
   out=$(FAKE_ROOT=1 run_install --only preflight 2>&1); rc=$?
   assert_eq "1" "$rc" "exit"
   assert_contains "$out" "do not run as root"
+}
+
+test_install_refuses_symlinked_target() {
+  prepare_install
+  mkdir -p "$FIX/home/.pi/agent" "$FIX/real"
+  printf 'real\n' > "$FIX/real/settings.json"
+  ln -s "$FIX/real/settings.json" "$FIX/home/.pi/agent/settings.json"
+  out=$(run_install --only pifiles 2>&1); rc=$?
+  assert_eq "1" "$rc" "symlink target refused"
+  assert_contains "$out" "symlink"
+  assert_eq "real" "$(cat "$FIX/real/settings.json")" "linked file untouched"
+}
+
+test_install_stops_on_permission_denied() {
+  [ "$(id -u)" -eq 0 ] && { echo "skip: running as root"; return 0; }
+  prepare_install
+  mkdir -p "$FIX/home/.config/ponytail"
+  printf '{}\n' > "$FIX/home/.config/ponytail/config.json"
+  chmod 0500 "$FIX/home/.config/ponytail"
+  out=$(run_install --only pifiles 2>&1); rc=$?
+  chmod 0755 "$FIX/home/.config/ponytail"
+  assert_eq "1" "$rc" "stops"
+  assert_contains "$out" "ponytail"
+}
+
+test_install_preflight_warns_on_non_arch() {
+  prepare_install
+  printf 'ID=debian\n' > "$FIX/os-release"
+  out=$(OS_RELEASE_FILE="$FIX/os-release" run_install --only preflight 2>&1); rc=$?
+  assert_eq "0" "$rc" "warn only"
+  assert_contains "$out" "not Arch Linux"
+}
+
+test_install_dry_run_without_tools() {
+  prepare_install
+  out=$(cd "$FIX/repo" && AGENT_BOOTSTRAP_HOME="$FIX/home" PATH="$FIX/bin:/usr/bin:/bin" \
+    FAKE_STATE="$FIX/pi-state.txt" FAKE_LOG="$FIX/log" \
+    bash bootstrap/install.sh --only pipackages --dry-run 2>&1); rc=$?
+  assert_eq "0" "$rc" "preview works before pi exists"
+  assert_contains "$out" "would run: pi update --extensions"
 }

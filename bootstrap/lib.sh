@@ -95,6 +95,17 @@ backup_target() {
   log "backed up $target -> $dest"
 }
 
+# True when the path or any ancestor below the home root is a symlink. Restore
+# must not write through one: the link's target is outside the tracked tree.
+path_crosses_symlink() {
+  local p=$1
+  while [ -n "$p" ] && [ "$p" != "/" ] && [ "$p" != "$HOST_HOME" ]; do
+    [ -L "$p" ] && return 0
+    p=$(dirname "$p")
+  done
+  return 1
+}
+
 run() {
   if [ "$DRY_RUN" = 1 ]; then
     printf 'would run: %s\n' "$*"

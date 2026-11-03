@@ -1,6 +1,6 @@
 sk-[A-Za-z0-9]{10,}
 ghp_[A-Za-z0-9]{20,}
 xox[bp]-[A-Za-z0-9-]{10,}
-(API_KEY|TOKEN|SECRET|PASSWORD)[[:space:]]*[:=][[:space:]]*["']?[A-Za-z0-9_/+-]{8,}
+(api[_-]?key|token|secret|password)["']?[[:space:]]*[:=][[:space:]]*["']?[A-Za-z0-9_/+-]{8,}
 Bearer [A-Za-z0-9._-]{10,}
-/home/[a-z][a-z0-9_-]*/
+/home/[a-z][^/"[:space:]]*
