@@ -5,6 +5,8 @@ Dotfiles for AI agent tooling — OpenCode agent skills, configuration files, an
 ## Structure
 
 ```
+.omp/agent/         oh-my-openagent provider and model configuration
+bootstrap/          Pi agent config backup: capture, install, verify
 .agents/skills/     AI agent skill definitions (code review, TDD, browser automation, etc.)
 .config/opencode/   OpenCode AI coding assistant configuration
 .config/tmux/       tmux terminal multiplexer configuration
@@ -53,6 +55,33 @@ ln -sf ~/agent-dot/.bashrc ~/.bashrc
 ln -sf ~/agent-dot/.config/opencode ~/.config/opencode
 ln -sf ~/agent-dot/.config/tmux ~/.config/tmux
 ```
+
+## Backup and restore
+
+The `bootstrap/` directory tracks the Pi agent configuration this machine actually
+runs, plus the small XDG configs of the tools that hang off it. Session history,
+package trees, caches, working notes, and every secret value are left out.
+
+```bash
+bash bootstrap/capture.sh --commit   # machine -> repo
+bash bootstrap/verify.sh             # repo vs machine, exit 1 on drift
+bash bootstrap/install.sh            # repo -> fresh machine
+```
+
+`install.sh` is idempotent and resumable: `--dry-run` prints the plan, `--only
+packages,pifiles` runs named steps, `--force` skips the `.pre-restore.<stamp>`
+backups it otherwise writes before overwriting anything.
+
+On a fresh Arch machine:
+
+```bash
+git clone https://github.com/codethare/agent-dot ~/.dot/agent-dot
+cd ~/.dot/agent-dot && bash bootstrap/install.sh
+```
+
+Then set the keys listed in `bootstrap/secrets.checklist.md` and start Pi once.
+The tracked `pi-ntfy.json` has an empty topic, so notifications stay off until
+you set a new one.
 
 ## Prerequisites
 

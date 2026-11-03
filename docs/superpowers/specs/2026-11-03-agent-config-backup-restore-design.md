@@ -105,7 +105,6 @@ Included, with their source path:
 | `files/pi/AGENTS.md`, `settings.json`, `keybindings.json`, `.mcp.json`, `commandcode-models.json`, `sandbox.json`, `pi-ntfy.json` | `~/.pi/agent/` |
 | `files/pi/themes/` | `~/.pi/agent/themes/` |
 | `files/pi/extensions/` | `~/.pi/agent/extensions/` |
-| `files/pi/docs/` | `~/.pi/agent/docs/` |
 | `files/xdg/herdr/config.toml`, `.plugins.lock` | `~/.config/herdr/` |
 | `files/xdg/{ponytail,rpiv-advisor,openspec,codebase-index}/` | `~/.config/<tool>/` |
 | `files/systemd/user/skills-pull.{service,timer}` | `~/.config/systemd/user/` |
@@ -125,6 +124,7 @@ Excluded, with reason:
 | `mcp-cache.json`, `mcp-last-seen-version.json`, `mcp-onboarding.json`, `mcp-project-approvals.json`, `models-store.json`, `next-suggestion.json`, `run-history.jsonl`, `pi-subagents/`, `pi-web-access/` | runtime state |
 | `auth.json` | credentials |
 | `trust.json` | 18 absolute project paths; restoring it would pre-approve directories that do not exist on the new machine |
+| `~/.pi/agent/docs/` | working artifacts; they embed absolute `/home/<user>` paths inside runnable snippets |
 | `*.test.ts`, `.settings.json.bak*` | development artifacts |
 | `~/.pi/workflows/`, `~/.pi/context-mode/`, `~/.pi/cache/` | per-project state, 29M of index data, cache |
 | `~/.config/herdr/session-snapshots/`, `*.log`, `release-notes.json`, `session*.json` | session state |
