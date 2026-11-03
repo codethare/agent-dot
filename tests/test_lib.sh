@@ -1,8 +1,8 @@
-test_map_entries_has_19_unique_paths() {
+test_map_entries_has_18_unique_paths() {
   . "$REPO/bootstrap/lib.sh"
-  assert_eq "19" "$(map_entries | wc -l | tr -d ' ')" "row count"
-  assert_eq "19" "$(map_entries | cut -f2 | sort -u | wc -l | tr -d ' ')" "unique home paths"
-  assert_eq "3" "$(map_entries | awk -F'\t' '$3=="tree"' | wc -l | tr -d ' ')" "tree entries"
+  assert_eq "18" "$(map_entries | wc -l | tr -d ' ')" "row count"
+  assert_eq "18" "$(map_entries | cut -f2 | sort -u | wc -l | tr -d ' ')" "unique home paths"
+  assert_eq "2" "$(map_entries | awk -F'\t' '$3=="tree"' | wc -l | tr -d ' ')" "tree entries"
 }
 
 test_map_entries_home_paths_are_relative() {
