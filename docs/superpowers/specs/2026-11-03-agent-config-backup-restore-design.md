@@ -1,7 +1,7 @@
 # Agent config backup and restore
 
 Date: 2026-11-03
-Status: awaiting approval
+Status: approved 2026-11-03
 Repo: `agent-dot` (origin `github.com/codethare/agent-dot`)
 
 ## Intent
