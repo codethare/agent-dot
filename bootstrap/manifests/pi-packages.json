@@ -13,7 +13,6 @@
   },
   "npm:pi-web-access",
   "npm:context-mode",
-  "npm:pi-commandcode-provider",
   "npm:@ogulcancelik/pi-ghost",
   "npm:pi-cache-optimizer",
   {

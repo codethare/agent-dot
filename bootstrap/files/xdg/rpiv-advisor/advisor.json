@@ -1,5 +1,5 @@
 {
-  "modelKey": "commandcode/claude-haiku-5-5",
+  "modelKey": "opencode-go/claude-haiku-5-5",
   "effort": "high",
   "disabledForModels": [
     "commandcode/claude-sonnet-5-5",

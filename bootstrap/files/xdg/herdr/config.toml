@@ -49,6 +49,10 @@ resume_agents_on_restore = true
 
 [ui]
 agent_panel_sort = "priority"
+tab_bar_position = "bottom"         # footer row: metrics live in the tab bar's right side
+tab_bar_right = [
+  { type = "command", command = "~/.config/herdr/footer.sh", interval_seconds = 5, timeout_seconds = 2 },
+]
 sidebar_collapsed_mode = "hidden"   # 折叠时零宽 ，而不是留一条 compact 状态栏
 pane_outer_borders = false          # 外框那 1 行 1 列还给你
 # pane_scrollbars = false             # 回收滚动条 那一列
